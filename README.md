@@ -7,7 +7,7 @@ sbt, but like npm, because npm-style is simply better :trollface:
 > — 01/02/2015
 
 
-<p align="center"><img src="https://cloud.githubusercontent.com/assets/138050/9618490/29613718-5107-11e5-94d1-c45a989ab05e.png"/></p>
+<p align="center"><a href="http://showterm.io/a84c337eaa9c560b730f2"><img src="https://cloud.githubusercontent.com/assets/138050/9618490/29613718-5107-11e5-94d1-c45a989ab05e.png"/></a></p>
 
 # setup
 
