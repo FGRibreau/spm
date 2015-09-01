@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+
+SBTI=`basename $0`
+SBT_FILE="build.sbt"
+BUILD_PROPERTIES="build.properties"
+SBT_FILE_CONTENT=""
+SBTI_VERSION="0.0.1"
+
+function buildSbtFileContent() {
+
+  SBT_FILE_CONTENT="
+lazy val root = (project in file(\".\")).settings(
+\n  name := \"$PROJECT_NAME\",
+\n  version := \"$PROJECT_VERSION\",
+\n  scalaVersion := \"$SCALA_VERSION\"
+\n)
+\n"
+}
+
+case $1 in
+  init)
+  PROJECT_NAME=${PWD##*/}
+  PROJECT_VERSION="1.0.0"
+  SCALA_VERSION="2.11.4"
+
+  echo -n "
+This utility will walk you through creating a $SBT_FILE file.
+It only covers the most common items, and tries to guess sane defaults.
+
+Use \`$SBTI install <pkg> --save\` afterwards to install a package and
+save it as a dependency in the $SBT_FILE file.
+
+Press ^C at any time to quit."
+
+  # @todo f: ask [prompt] [defaultValue] => value
+  echo ""
+  echo -n "name: ($PROJECT_NAME) "
+  read PROJECT_NAME_OVERRIDEN
+  if [ -n "$PROJECT_NAME_OVERRIDEN" ]; then
+    PROJECT_NAME=$PROJECT_NAME_OVERRIDEN
+  fi
+
+  echo -n "version: ($PROJECT_VERSION) "
+  read PROJECT_VERSION_OVERRIDEN
+  if [ -n "$PROJECT_VERSION_OVERRIDEN" ]; then
+    PROJECT_VERSION=$PROJECT_VERSION_OVERRIDEN
+  fi
+
+  echo -n "scalaVersion: ($SCALA_VERSION) "
+  read SCALA_VERSION_OVERRIDEN
+  if [ -n "$SCALA_VERSION_OVERRIDEN" ]; then
+    SCALA_VERSION=$SCALA_VERSION_OVERRIDEN
+  fi
+
+  buildSbtFileContent
+
+  echo "About to write to $SBT_FILE:"
+  echo -e $SBT_FILE_CONTENT
+  echo ""
+  echo -n "Is this ok? (yes)"
+  read ABORT_WRITE
+  if [ -n "$ABORT_WRITE" ]; then
+    echo "Aborted."
+    exit 1
+  fi
+
+  echo -e "build.properties=1.0.0" > $BUILD_PROPERTIES
+  echo -e $SBT_FILE_CONTENT > $SBT_FILE
+    ;;
+
+  install)
+    dep=(${2//// })
+    groupID=${dep[0]}
+    dep=(${dep[1]//@/ })
+    artifactID=${dep[0]}
+    revision=${dep[1]}
+    # @todo check if the library is already installed, dedup dependencies
+    echo -e "\nlibraryDependencies += \"$groupID\" % \"$artifactID\" % \"$revision\"" >> $SBT_FILE
+    sbt update
+    ;;
+
+  start)
+    sbt run
+    ;;
+
+  version)
+    echo $SBTI_VERSION
+    ;;
+  *)
+    echo ""
+    echo "Usage: $SBTI <command>"
+    echo ""
+    echo "where <command> is one of:"
+    echo "  init, install, start, version"
+    ;;
+esac
+
+exit 0
