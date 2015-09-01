@@ -10,7 +10,9 @@ sbt, but like npm, because npm-style is simply better :trollface:
 
 # setup
 
-
+```bash
+curl https://raw.githubusercontent.com/FGRibreau/sbti/master/sbti > /usr/local/bin/sbti
+```
 
 # help
 
@@ -23,7 +25,7 @@ where <command> is one of:
 
 # usage
 
-```
+```bash
 sbti init && sbti install com.rabbitmq/amqp-client@3.5.2 -S
 ```
 
