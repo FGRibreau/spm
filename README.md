@@ -1,7 +1,5 @@
 # sbti
 
-sbt, but like npm, because npm-style is simply better :trollface:
-
 
 > I just want to bootstrap a scala project and install my deps for God's sake.
 > — 01/02/2015
@@ -34,6 +32,7 @@ sbti init && sbti install com.rabbitmq/amqp-client@3.5.2 -S
 
 ### Goals
 
+- `sbti install amqp-client scalaz -S ` should resolve both dependencies, add any missing resolvers to `build.sbt` and install the latest versions
 - auto-resolve (use a central repository?)
 - search names in repositories. e.g. If the user ask to install amqp-client, sbti should asks if he meant com.rabbitmq/amqp-client@X.X.X and other equivalents
 
