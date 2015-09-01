@@ -6,7 +6,8 @@ sbt, but like npm, because npm-style is simply better :trollface:
 > I just want to bootstrap a scala project and install my deps for God's sake.
 > — 01/02/2015
 
-![a](https://cloud.githubusercontent.com/assets/138050/9618490/29613718-5107-11e5-94d1-c45a989ab05e.png)
+
+<p align="center"><img src="https://cloud.githubusercontent.com/assets/138050/9618490/29613718-5107-11e5-94d1-c45a989ab05e.png"/></p>
 
 # setup
 
