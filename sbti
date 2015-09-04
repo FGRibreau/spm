@@ -44,6 +44,7 @@ function searchLibrary() {
 
   clear
 
+  # if the user selected a library
   if [ -n "${SELECTED_LIBRARY}" ]; then
     DEP=(${SELECTED_LIBRARY//:/ })
     GROUPID=${DEP[0]}
@@ -52,11 +53,11 @@ function searchLibrary() {
     REVISION=${DEP[1]}
     LIBRARY="\"$GROUPID\" % \"$ARTIFACTID\" % \"$REVISION\""
 
-    # if the user selected a library, add it to the list of added libraries
+    # add it to the list of added libraries
     ADDED_LIBRARIES+=("$SELECTED_LIBRARY")
 
     # @todo check if the library is already installed, dedup dependencies
-    echo -e "\nlibraryDependencies += $LIBRARY" >> $SBT_FILE
+    echo -e "libraryDependencies += $LIBRARY" >> $SBT_FILE
   fi
 }
 
