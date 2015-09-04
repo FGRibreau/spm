@@ -5,6 +5,7 @@ SBT_FILE="build.sbt"
 BUILD_PROPERTIES="build.properties"
 SBT_FILE_CONTENT=""
 SBTI_VERSION="0.0.1"
+ADDED_LIBRARIES=()
 
 function buildSbtFileContent() {
 
@@ -15,6 +16,48 @@ lazy val root = (project in file(\".\")).settings(
 \n  scalaVersion := \"$SCALA_VERSION\"
 \n)
 \n"
+}
+
+function searchLibrary() {
+  SEARCH_QUERY=$1
+  SEARCH_SIZE=20
+  SEARCH_RESULTS=`curl --silent "http://search.maven.org/solrsearch/select?q=${SEARCH_QUERY}&rows=${SEARCH_SIZE}&wt=json"`
+  if [ $? != 0 ]; then
+    echo 'An error occured while search on maven.org.';
+    exit 1;
+  fi
+
+  # I will keep this line just to remember myself that the above code was done on a friday night train to Paris without internet (4th September 2015)
+  # SEARCH_RESULTS=`cat results.json`
+
+  MENU_OPTIONS=`echo ${SEARCH_RESULTS} | jq -r '.response.docs[].id'`
+  MENU_TEXT="Select library for '${SEARCH_QUERY}'"
+  MENU_YES_LABEL="Add to ${SBT_FILE}"
+
+  SELECTED_LIBRARY=`dialog --stdout \
+    --ok-label "${MENU_YES_LABEL}" \
+    --scrollbar \
+    --title "${SBTI}" \
+    --yes-label "${MENU_YES_LABEL}" \
+    --no-items \
+    --menu "${MENU_TEXT}" 25 55 $SEARCH_SIZE $(echo $MENU_OPTIONS)`
+
+  clear
+
+  if [ -n "${SELECTED_LIBRARY}" ]; then
+    DEP=(${SELECTED_LIBRARY//:/ })
+    GROUPID=${DEP[0]}
+    DEP=(${DEP[1]//_/ })
+    ARTIFACTID=${DEP[0]}
+    REVISION=${DEP[1]}
+    LIBRARY="\"$GROUPID\" % \"$ARTIFACTID\" % \"$REVISION\""
+
+    # if the user selected a library, add it to the list of added libraries
+    ADDED_LIBRARIES+=("$SELECTED_LIBRARY")
+
+    # @todo check if the library is already installed, dedup dependencies
+    echo -e "\nlibraryDependencies += $LIBRARY" >> $SBT_FILE
+  fi
 }
 
 case $1 in
@@ -69,47 +112,17 @@ Press ^C at any time to quit."
     ;;
 
   install)
-    SEARCH_QUERY=$2
-    SEARCH_SIZE=20
-    # SEARCH_RESULTS=`curl --silent "http://search.maven.org/solrsearch/select?q=${SEARCH_QUERY}&rows=${SEARCH_SIZE}&wt=json"`
-    # if [ $? != 0 ]; then
-    #   echo 'An error occured while search on maven.org.';
-    #   exit 1;
-    # fi
+    for ((i=2;i<=$#;i++));
+    do
+      LIBRARY_QUERY=${!i}
+      searchLibrary $LIBRARY_QUERY
+    done
 
-    # I will keep this line just to remember myself that the above code was done on a friday night train to Paris without internet (4th September 2015)
-    SEARCH_RESULTS=`cat results.json`
+    for ADDED_LIBRARY in "${ADDED_LIBRARIES[@]}"
+    do
+      echo "Installing $ADDED_LIBRARY..."
+    done
 
-    MENU_OPTIONS=`echo ${SEARCH_RESULTS} | jq -r '.response.docs[].id'`
-    MENU_TEXT="Select library for '${SEARCH_QUERY}'"
-    MENU_YES_LABEL="Add to ${SBT_FILE}"
-
-    SELECTED_LIBRARY=`dialog --stdout \
-      --ok-label "${MENU_YES_LABEL}" \
-      --scrollbar \
-      --title "${SBTI}" \
-      --yes-label "${MENU_YES_LABEL}" \
-      --no-items \
-      --menu "${MENU_TEXT}" 25 55 $SEARCH_SIZE $(echo $MENU_OPTIONS)`
-
-    clear
-
-    if [ "${SELECTED_LIBRARY}" == '' ]; then
-      echo "Aborted."
-      exit 1;
-    fi
-
-    DEP=(${SELECTED_LIBRARY//:/ })
-    GROUPID=${DEP[0]}
-    DEP=(${DEP[1]//_/ })
-    ARTIFACTID=${DEP[0]}
-    REVISION=${DEP[1]}
-    LIBRARY="\"$GROUPID\" % \"$ARTIFACTID\" % \"$REVISION\""
-
-    # @todo check if the library is already installed, dedup dependencies
-    echo -e "\nlibraryDependencies += $LIBRARY" >> $SBT_FILE
-
-    echo "Installing $LIBRARY..."
     sbt update
     ;;
 
