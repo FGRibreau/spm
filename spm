@@ -23,10 +23,26 @@ lazy val root = (project in file(\".\")).settings(
 \n"
 }
 
+function addLibrary() {
+  SELECTED_LIBRARY=$1
+  DEP=(${SELECTED_LIBRARY//:/ })
+  GROUPID=${DEP[0]}
+  DEP=(${DEP[1]//@/ })
+  ARTIFACTID=${DEP[0]}
+  REVISION=${DEP[1]}
+  LIBRARY="\"$GROUPID\" % \"$ARTIFACTID\" % \"$REVISION\""
+
+  # add it to the list of added libraries
+  ADDED_LIBRARIES+=("$SELECTED_LIBRARY")
+
+  # @todo check if the library is already installed, dedup dependencies
+  echo -e "libraryDependencies += $LIBRARY" >> $SBT_FILE
+}
+
 function searchLibrary() {
   SEARCH_QUERY=$1
   SEARCH_SIZE=20
-  SEARCH_RESULTS=`curl --silent "http://search.maven.org/solrsearch/select?q=${SEARCH_QUERY}&rows=${SEARCH_SIZE}&wt=json"`
+  SEARCH_RESULTS=`curl --silent "http://search.maven.org/solrsearch/select?q=a:${SEARCH_QUERY}&rows=${SEARCH_SIZE}&wt=json"`
   if [ $? != 0 ]; then
     echo 'An error occured while search on maven.org.';
     exit 1;
@@ -35,34 +51,31 @@ function searchLibrary() {
   # I will keep this line just to remember myself that the above code was done on a friday night train to Paris without internet (4th September 2015)
   # SEARCH_RESULTS=`cat results.json`
 
-  MENU_OPTIONS=`echo ${SEARCH_RESULTS} | jq -r '.response.docs[].id'`
-  MENU_TEXT="Select library for '${SEARCH_QUERY}'"
-  MENU_YES_LABEL="Add to ${SBT_FILE}"
 
-  SELECTED_LIBRARY=`dialog --stdout \
-    --ok-label "${MENU_YES_LABEL}" \
-    --scrollbar \
-    --title "${SPM}" \
-    --yes-label "${MENU_YES_LABEL}" \
-    --no-items \
-    --menu "${MENU_TEXT}" 25 55 $SEARCH_SIZE $(echo $MENU_OPTIONS)`
+  MENU_OPTIONS=`echo ${SEARCH_RESULTS} | jq -r '.response.docs[] | "\(.id)@\(.latestVersion)"'`
+  MENU_OPTIONS_LENGTH=`echo ${SEARCH_RESULTS} | jq -r '.response.numFound'`
 
-  clear
+  # todo handle the "not found" case
+  if [ $MENU_OPTIONS_LENGTH -eq "1" ]; then
+    addLibrary ${MENU_OPTIONS}
+  else
+    MENU_TEXT="Select library for '${SEARCH_QUERY}'"
+    MENU_YES_LABEL="Add to ${SBT_FILE}"
 
-  # if the user selected a library
-  if [ -n "${SELECTED_LIBRARY}" ]; then
-    DEP=(${SELECTED_LIBRARY//:/ })
-    GROUPID=${DEP[0]}
-    DEP=(${DEP[1]//_/ })
-    ARTIFACTID=${DEP[0]}
-    REVISION=${DEP[1]}
-    LIBRARY="\"$GROUPID\" % \"$ARTIFACTID\" % \"$REVISION\""
+    SELECTED_LIBRARY=`dialog --stdout \
+      --ok-label "${MENU_YES_LABEL}" \
+      --scrollbar \
+      --title "${SPM}" \
+      --yes-label "${MENU_YES_LABEL}" \
+      --no-items \
+      --menu "${MENU_TEXT}" 25 55 $SEARCH_SIZE $(echo $MENU_OPTIONS)`
 
-    # add it to the list of added libraries
-    ADDED_LIBRARIES+=("$SELECTED_LIBRARY")
+    clear
 
-    # @todo check if the library is already installed, dedup dependencies
-    echo -e "libraryDependencies += $LIBRARY" >> $SBT_FILE
+    # if the user selected a library
+    if [ -n "${SELECTED_LIBRARY}" ]; then
+      addLibrary ${SELECTED_LIBRARY}
+    fi
   fi
 }
 
