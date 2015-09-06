@@ -16,7 +16,7 @@ brew update && brew install curl jq dialog
 curl https://raw.githubusercontent.com/FGRibreau/spm/master/spm > /usr/local/bin/spm
 ```
 
-### Debian
+### Debian/Ubuntu
 
 ```bash
 apt-get update && apt-get install curl jq dialog
