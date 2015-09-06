@@ -6,7 +6,7 @@
 SPM=`basename $0`
 SBT_FILE="build.sbt"
 BUILD_PROPERTIES="build.properties"
-VERSION="0.0.1"
+VERSION="1.0.0"
 
 # global state
 SBT_FILE_CONTENT=""
