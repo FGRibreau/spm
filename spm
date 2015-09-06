@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
+#
+# SPM - Scala Package Manager
+#
 
-SBTI=`basename $0`
+SPM=`basename $0`
 SBT_FILE="build.sbt"
 BUILD_PROPERTIES="build.properties"
+VERSION="0.0.1"
+
+# global state
 SBT_FILE_CONTENT=""
-SBTI_VERSION="0.0.1"
 ADDED_LIBRARIES=()
 
 function buildSbtFileContent() {
@@ -37,7 +42,7 @@ function searchLibrary() {
   SELECTED_LIBRARY=`dialog --stdout \
     --ok-label "${MENU_YES_LABEL}" \
     --scrollbar \
-    --title "${SBTI}" \
+    --title "${SPM}" \
     --yes-label "${MENU_YES_LABEL}" \
     --no-items \
     --menu "${MENU_TEXT}" 25 55 $SEARCH_SIZE $(echo $MENU_OPTIONS)`
@@ -71,7 +76,7 @@ case $1 in
 This utility will walk you through creating a $SBT_FILE file.
 It only covers the most common items, and tries to guess sane defaults.
 
-Use \`$SBTI install <pkg> --save\` afterwards to install a package and
+Use \`$SPM install <pkg> --save\` afterwards to install a package and
 save it as a dependency in the $SBT_FILE file.
 
 Press ^C at any time to quit."
@@ -132,11 +137,11 @@ Press ^C at any time to quit."
     ;;
 
   version)
-    echo $SBTI_VERSION
+    echo $VERSION
     ;;
   *)
     echo ""
-    echo "Usage: $SBTI <command>"
+    echo "Usage: $SPM <command>"
     echo ""
     echo "where <command> is one of:"
     echo "  init, install, start, version"
