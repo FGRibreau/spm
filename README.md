@@ -9,7 +9,17 @@
 
 # Setup
 
+### Mac OSX
+
 ```bash
+brew update && brew install curl jq dialog
+curl https://raw.githubusercontent.com/FGRibreau/spm/master/spm > /usr/local/bin/spm
+```
+
+### Debian
+
+```bash
+apt-get update && apt-get install curl jq dialog
 curl https://raw.githubusercontent.com/FGRibreau/spm/master/spm > /usr/local/bin/spm
 ```
 
