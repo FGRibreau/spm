@@ -1,10 +1,5 @@
 # spm - scala package manager
 
-
-> I just want to bootstrap a scala project and install my deps for God's sake.
-> — 01/02/2015
-
-
 <p align="center"><a href="http://showterm.io/1f5283d1b09d33d6da1a8"><img src="http://i.imgur.com/terVLiN.gif"/></a></p>
 
 # Setup
@@ -55,3 +50,9 @@ spm init && spm install scalaz amqp-client
 
 - if `--save or -S were not specified, directly install the library inside lib/ folder
 - everything else...
+
+
+# Origin
+
+> I just want to quickly bootstrap a scala project and install my deps for God's sake.
+> — 01/02/2015
