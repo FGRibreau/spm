@@ -12,6 +12,10 @@ VERSION="1.0.0"
 SBT_FILE_CONTENT=""
 ADDED_LIBRARIES=()
 
+# utils
+log()  { >&2 echo "$@"; }
+die()  { log "Error: $@"; exit 1; }
+
 function buildSbtFileContent() {
 
   SBT_FILE_CONTENT="
@@ -43,10 +47,7 @@ function searchLibrary() {
   SEARCH_QUERY=$1
   SEARCH_SIZE=20
   SEARCH_RESULTS=`curl --silent "http://search.maven.org/solrsearch/select?q=a:${SEARCH_QUERY}&rows=${SEARCH_SIZE}&wt=json"`
-  if [ $? != 0 ]; then
-    echo 'An error occured while search on maven.org.';
-    exit 1;
-  fi
+  [ $? != 0 ] && die 'An error occured while search on maven.org.'
 
   # I will keep this line just to remember myself that the above code was done on a friday night train to Paris without internet (4th September 2015)
   # SEARCH_RESULTS=`cat results.json`
@@ -56,7 +57,9 @@ function searchLibrary() {
   MENU_OPTIONS_LENGTH=`echo ${SEARCH_RESULTS} | jq -r '.response.numFound'`
 
   # todo handle the "not found" case
-  if [ $MENU_OPTIONS_LENGTH -eq "1" ]; then
+  if [ $MENU_OPTIONS_LENGTH -eq "0" ]; then
+    die "No match for '$SEARCH_QUERY'"
+  elif [ $MENU_OPTIONS_LENGTH -eq "1" ]; then
     addLibrary ${MENU_OPTIONS}
   else
     MENU_TEXT="Select library for '${SEARCH_QUERY}'"
