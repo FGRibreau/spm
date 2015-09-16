@@ -18,3 +18,4 @@ project/plugins/project/
 results.json
 build.properties
 build.sbt
+docs/
