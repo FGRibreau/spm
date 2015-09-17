@@ -34,7 +34,11 @@ function addLibrary() {
   DEP=(${DEP[1]//@/ })
   ARTIFACTID=${DEP[0]}
   REVISION=${DEP[1]}
-  LIBRARY="\"$GROUPID\" %% \"$ARTIFACTID\" % \"$REVISION\""
+  if [[ $1 == *"$SCALA_MAJOR_VERSION"* ]]; then
+    LIBRARY="\"$GROUPID\" %% \"$ARTIFACTID\" % \"$REVISION\""
+  else
+    LIBRARY="\"$GROUPID\" % \"$ARTIFACTID\" % \"$REVISION\""
+  fi
 
   # add it to the list of added libraries
   ADDED_LIBRARIES+=("$SELECTED_LIBRARY")
@@ -43,23 +47,13 @@ function addLibrary() {
   echo -e "libraryDependencies += $LIBRARY" >> $SBT_FILE
 }
 
-function searchLibrary() {
-  SCALA_MAJOR_VERSION=`grep scalaVersion build.sbt |sed 's/[^0-9.]//g' | awk -F '.' {'print $1 "." $2'}`
-  SEARCH_QUERY=$1
-  SEARCH_SIZE=20
-  SEARCH_RESULTS=`curl --silent "http://search.maven.org/solrsearch/select?q=a:${SEARCH_QUERY}_${SCALA_MAJOR_VERSION}&rows=${SEARCH_SIZE}&wt=json"`
-  [ $? != 0 ] && die 'An error occured while search on maven.org.'
-
-  # I will keep this line just to remember myself that the above code was done on a friday night train to Paris without internet (4th September 2015)
-  # SEARCH_RESULTS=`cat results.json`
-
-
-  MENU_OPTIONS=`echo ${SEARCH_RESULTS} | jq -r '.response.docs[] | "\(.id)@\(.latestVersion)"'`
-  MENU_OPTIONS_LENGTH=`echo ${SEARCH_RESULTS} | jq -r '.response.numFound'`
+function libraryDialog() {
+  MENU_OPTIONS=${1}
+  MENU_OPTIONS_LENGTH=${2}
 
   # todo handle the "not found" case
   if [ $MENU_OPTIONS_LENGTH -eq "0" ]; then
-    die "No match for '$SEARCH_QUERY'"
+    die "No match for '${3}'"
   elif [ $MENU_OPTIONS_LENGTH -eq "1" ]; then
     addLibrary ${MENU_OPTIONS}
   else
@@ -72,7 +66,7 @@ function searchLibrary() {
       --title "${SPM}" \
       --yes-label "${MENU_YES_LABEL}" \
       --no-items \
-      --menu "${MENU_TEXT}" 25 55 $SEARCH_SIZE $(echo $MENU_OPTIONS)`
+      --menu "${MENU_TEXT}" 25 55 $4 $(echo $MENU_OPTIONS)`
 
     clear
 
@@ -81,6 +75,29 @@ function searchLibrary() {
       addLibrary ${SELECTED_LIBRARY}
     fi
   fi
+}
+
+function searchLibrary() {
+  SCALA_MAJOR_VERSION=`grep scalaVersion build.sbt |sed 's/[^0-9.]//g' | awk -F '.' {'print $1 "." $2'}`
+  SEARCH_QUERY=$1
+  SEARCH_SIZE=20
+  SCALA_SEARCH_RESULTS=`curl --silent "http://search.maven.org/solrsearch/select?q=a:${SEARCH_QUERY}_${SCALA_MAJOR_VERSION}&rows=${SEARCH_SIZE}&wt=json"`
+  [ $? != 0 ] && die 'An error occured while search on maven.org.'
+
+  # I will keep this line just to remember myself that the above code was done on a friday night train to Paris without internet (4th September 2015)
+  # SEARCH_RESULTS=`cat results.json`
+  
+  MENU_OPTIONS=`echo ${SCALA_SEARCH_RESULTS} | jq -r '.response.docs[] | "\(.id)@\(.latestVersion)"'`
+  MENU_OPTIONS_LENGTH=`echo ${SCALA_SEARCH_RESULTS} | jq -r '.response.numFound'`
+  if [ $MENU_OPTIONS_LENGTH -eq "0" ]; then
+    SEARCH_RESULTS=`curl --silent "http://search.maven.org/solrsearch/select?q=a:${SEARCH_QUERY}&rows=${SEARCH_SIZE}&wt=json"`
+    [ $? != 0 ] && die 'An error occured while search on maven.org.'
+
+    MENU_OPTIONS=`echo ${SEARCH_RESULTS} | jq -r '.response.docs[] | "\(.id)@\(.latestVersion)"'`
+    MENU_OPTIONS_LENGTH=`echo ${SEARCH_RESULTS} | jq -r '.response.numFound'`
+  fi
+
+  libraryDialog "${MENU_OPTIONS}" $MENU_OPTIONS_LENGTH $SEARCH_QUERY $SEARCH_SIZE
 }
 
 case $1 in
@@ -166,4 +183,3 @@ Press ^C at any time to quit."
 esac
 
 exit 0
-
