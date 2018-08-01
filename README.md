@@ -8,14 +8,14 @@
 
 ```bash
 brew update && brew install curl jq dialog
-curl https://raw.githubusercontent.com/FGRibreau/spm/master/spm > /usr/local/bin/spm
+curl https://raw.githubusercontent.com/FGRibreau/spm/master/spm > /usr/local/bin/spm && chmod +x /usr/local/bin/spm
 ```
 
 ### Debian/Ubuntu
 
 ```bash
 apt-get update && apt-get install curl jq dialog
-curl https://raw.githubusercontent.com/FGRibreau/spm/master/spm > /usr/local/bin/spm
+curl https://raw.githubusercontent.com/FGRibreau/spm/master/spm > /usr/local/bin/spm && chmod +x /usr/local/bin/spm
 ```
 
 # Options
